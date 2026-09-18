@@ -1,0 +1,45 @@
+{
+  "id": "wealthfolio-technical-analysis",
+  "name": "Technical Analysis",
+  "version": "2.2.0",
+  "description": "Technical Analysis Addon for Wealthfolio (持倉總覽, 技術指標篩選, 日K, SMA, Bollinger Bands, RSI, Pivot)",
+  "author": "juicheng",
+  "main": "dist/addon.js",
+  "sdkVersion": "3.8.0",
+  "minWealthfolioVersion": "3.8.0",
+  "enabled": true,
+  "contributes": {
+    "routes": [{ "id": "tech-analysis" }],
+    "links": {
+      "sidebar": [
+        {
+          "id": "tech-analysis",
+          "route": "tech-analysis",
+          "label": "Technical Analysis",
+          "icon": "line-chart",
+          "order": 100
+        }
+      ]
+    }
+  },
+  "permissions": [
+    {
+      "category": "accounts",
+      "functions": ["getAll"],
+      "purpose": "Read available accounts to load portfolio holdings"
+    },
+    {
+      "category": "portfolio",
+      "functions": ["getHoldings"],
+      "purpose": "Read user holdings to display technical analysis overview"
+    },
+    {
+      "category": "network",
+      "functions": ["request"],
+      "purpose": "Fetch real-time stock data from Yahoo Finance"
+    }
+  ],
+  "network": {
+    "allowedHosts": ["query1.finance.yahoo.com", "query2.finance.yahoo.com"]
+  }
+}

@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment and OS files
+.DS_Store
+*.local
+.env
+.env.*.local
+
+# Temporary files
+extracted_main.js
+test-yahoo.mjs
