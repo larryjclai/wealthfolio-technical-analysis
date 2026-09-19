@@ -2,7 +2,7 @@
 
 ## 尚未發行
 
-尚無變更。後續修改先記錄於此，交付新版時再依 README 的版本規則定版。
+- 簡化 README 為功能、安裝與操作指南；計算細節移至 `docs/calculation-notes.md`，開發與發布流程移至 `docs/maintenance.md`。
 
 ## 1.0.2 — 2026-09-19
 
