@@ -47,6 +47,7 @@ export interface HistoryResult {
     warnings: string[];
     fiftyTwoWeekHigh?: number;
     fiftyTwoWeekLow?: number;
+    splitDates?: number[];
   };
 }
 

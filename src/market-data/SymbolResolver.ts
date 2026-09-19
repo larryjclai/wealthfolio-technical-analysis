@@ -16,7 +16,7 @@ export function getTaiwanStockInfo(symbol: string): TwStockInfo | undefined {
 export class SymbolResolver {
   async resolve(input: { symbol: string; market?: Market }): Promise<Instrument> {
     const symbol = input.symbol.trim().toUpperCase();
-    let market = input.market;
+    let market = symbol.endsWith('.TWO') ? 'TPEX' as const : symbol.endsWith('.TW') ? 'TWSE' as const : input.market;
 
     if (!market) {
       const twInfo = getTaiwanStockInfo(symbol);
@@ -35,12 +35,12 @@ export class SymbolResolver {
     let timezone = '';
 
     if (market === 'TWSE') {
-      providerSymbol = `${symbol.replace(/\.TW$/, '')}.TW`;
+      providerSymbol = `${symbol.replace(/\.(TW|TWO)$/, '')}.TW`;
       exchange = 'TWSE';
       currency = 'TWD';
       timezone = 'Asia/Taipei';
     } else if (market === 'TPEX') {
-      providerSymbol = `${symbol.replace(/\.TWO$/, '')}.TWO`;
+      providerSymbol = `${symbol.replace(/\.(TW|TWO)$/, '')}.TWO`;
       exchange = 'TPEX';
       currency = 'TWD';
       timezone = 'Asia/Taipei';
@@ -55,7 +55,7 @@ export class SymbolResolver {
 
     return {
       key: `${market}:${symbol}`,
-      symbol,
+      symbol: symbol.replace(/\.(TW|TWO)$/, ''),
       market,
       exchange,
       currency,
@@ -71,9 +71,10 @@ export class SymbolResolver {
     displayName: string;
     market: Market;
   } {
-    const rawSymbol = holding.instrument?.symbol || '';
+    const rawSymbol = (holding.instrument?.symbol || '').trim().toUpperCase();
+    if (!rawSymbol) throw new Error('持倉缺少股票代碼');
     const cleanSymbol = rawSymbol.trim().toUpperCase().replace(/\.(TW|TWO)$/, '');
-    const currency = holding.instrument?.currency || holding.localCurrency;
+    let currency = holding.instrument?.currency || holding.localCurrency;
 
     // Look up Traditional Chinese name and exact market (TWSE/TPEX)
     const twInfo = getTaiwanStockInfo(cleanSymbol);
@@ -83,14 +84,16 @@ export class SymbolResolver {
     let timezone = 'UTC';
     let market: Market = 'US';
 
-    if (currency === 'TWD' || twInfo || /^\d{4,6}$/.test(cleanSymbol)) {
-      market = twInfo ? twInfo.market : 'TWSE';
+    if (currency === 'TWD' || twInfo || /\.(TW|TWO)$/.test(rawSymbol) || /^\d{4,6}$/.test(cleanSymbol)) {
+      market = rawSymbol.endsWith('.TWO') ? 'TPEX' : rawSymbol.endsWith('.TW') ? 'TWSE' : twInfo?.market || 'TWSE';
       providerSymbol = market === 'TPEX' ? `${cleanSymbol}.TWO` : `${cleanSymbol}.TW`;
-      currency === 'TWD' ? currency : 'TWD';
+      currency = 'TWD';
       timezone = 'Asia/Taipei';
-    } else if (['USD', 'EUR', 'GBP'].includes(currency)) {
+    } else if (currency === 'USD') {
       providerSymbol = cleanSymbol;
       timezone = 'America/New_York';
+    } else {
+      throw new Error(`尚未支援 ${rawSymbol} 的市場（${currency}）`);
     }
 
     return { providerSymbol, currency, timezone, displayName, market };

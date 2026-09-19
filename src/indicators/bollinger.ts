@@ -11,6 +11,8 @@ export function bollingerBands(data: number[], period: number, multiplier: numbe
   const upper: (number | null)[] = new Array(data.length).fill(null);
   const lower: (number | null)[] = new Array(data.length).fill(null);
   
+  if (!Number.isInteger(period) || period < 1 || !Number.isFinite(multiplier) || multiplier < 0) return { upper, middle, lower };
+
   for (let i = period - 1; i < data.length; i++) {
     const slice = data.slice(i - period + 1, i + 1);
     const mean = middle[i] as number;

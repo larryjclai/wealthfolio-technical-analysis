@@ -19,10 +19,10 @@ export function calculatePivot(high: number, low: number, close: number, type: P
       p,
       r1: 2 * p - low,
       r2: p + range,
-      r3: high + 2 * (p - low),
+      r3: p + 2 * range,
       s1: 2 * p - high,
       s2: p - range,
-      s3: low - 2 * (high - p)
+      s3: p - 2 * range
     };
   } else {
     // fibonacci

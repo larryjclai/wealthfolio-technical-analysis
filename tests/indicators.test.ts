@@ -57,10 +57,17 @@ describe('Technical Indicators', () => {
     expect(res.p).toBeCloseTo(100);
     expect(res.r1).toBeCloseTo(110);
     expect(res.r2).toBeCloseTo(120);
-    expect(res.r3).toBeCloseTo(130);
+    expect(res.r3).toBeCloseTo(140);
     expect(res.s1).toBeCloseTo(90);
     expect(res.s2).toBeCloseTo(80);
-    expect(res.s3).toBeCloseTo(70);
+    expect(res.s3).toBeCloseTo(60);
+  });
+
+  it('distinguishes Classic R3/S3 from Traditional with asymmetric prices', () => {
+    const result = calculatePivot(115, 90, 110, 'classic');
+    expect(result.p).toBe(105);
+    expect(result.r3).toBe(155);
+    expect(result.s3).toBe(55);
   });
 
   it('should calculate Pivot (Fibonacci) correctly', () => {

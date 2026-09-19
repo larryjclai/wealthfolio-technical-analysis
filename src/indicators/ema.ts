@@ -1,7 +1,7 @@
 export function ema(data: number[], period: number): (number | null)[] {
   const result: (number | null)[] = new Array(data.length).fill(null);
   
-  if (data.length < period || period < 1) return result;
+  if (data.length < period || !Number.isInteger(period) || period < 1) return result;
   
   // The first EMA is exactly the SMA of the first 'period' data points
   let sum = 0;

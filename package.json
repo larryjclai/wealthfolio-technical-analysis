@@ -1,6 +1,6 @@
 {
   "name": "wealthfolio-technical-analysis",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Technical Analysis Addon for Wealthfolio",
   "type": "module",
   "scripts": {
@@ -10,8 +10,9 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
-    "bundle": "npm run build && zip -r addon.zip manifest.json dist/ assets/",
-    "test": "vitest run"
+    "bundle": "npm run build && node scripts/bundle.mjs",
+    "test": "vitest run",
+    "preview:fixtures": "vite --host 127.0.0.1"
   },
   "dependencies": {
     "lightweight-charts": "^4.1.1"

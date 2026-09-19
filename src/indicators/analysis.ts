@@ -1,7 +1,9 @@
 import { sma } from './sma';
 import { bollingerBands } from './bollinger';
 import { rsi } from './rsi';
-import { calculatePivot, PivotResult } from './pivot';
+import { PivotResult } from './pivot';
+import { Bar } from '../market-data/types';
+import { supportResistance } from './support-resistance';
 
 /** Latest values of all computed indicators for one stock */
 export interface StockAnalysis {
@@ -9,6 +11,10 @@ export interface StockAnalysis {
   displayName: string;
   market: string;
   currentPrice: number;
+  latestTradingDate: string;
+  provisional: boolean;
+  support: number | null;
+  resistance: number | null;
   previousClose: number;
   dayChange: number;
   dayChangePct: number;
@@ -72,9 +78,9 @@ export interface Signal {
 }
 
 const SIGNAL_DEFINITIONS: Record<SignalType, { label: string; sentiment: Signal['sentiment'] }> = {
-  below_sma60: { label: '跌破季線', sentiment: 'bearish' },
-  below_sma240: { label: '跌破年線', sentiment: 'bearish' },
-  above_sma240: { label: '站上年線', sentiment: 'bullish' },
+  below_sma60: { label: '低於季線', sentiment: 'bearish' },
+  below_sma240: { label: '低於年線', sentiment: 'bearish' },
+  above_sma240: { label: '高於年線', sentiment: 'bullish' },
   rsi_overbought: { label: 'RSI 超買', sentiment: 'bearish' },
   rsi_oversold: { label: 'RSI 超賣', sentiment: 'bullish' },
   near_52w_low: { label: '近52週低', sentiment: 'bearish' },
@@ -92,16 +98,12 @@ function lastValue(arr: (number | null)[]): number | null {
 }
 
 export interface AnalysisInput {
+  bars: Bar[];
   symbol: string;
   displayName: string;
   market: string;
   quantity: number;
   marketValue: number;
-  closes: number[];
-  highs: number[];
-  lows: number[];
-  opens: number[];
-  volumes: number[];
   week52High: number | null;
   week52Low: number | null;
 }
@@ -110,29 +112,10 @@ export interface AnalysisInput {
  * Compute all technical indicators for a single stock.
  */
 export function analyzeStock(input: AnalysisInput): StockAnalysis {
-  const { closes, highs, lows } = input;
+  const closes = input.bars.map(bar => bar.close);
   
   if (closes.length === 0) {
-    // Return empty analysis for stocks with no data
-    return {
-      symbol: input.symbol,
-      displayName: input.displayName,
-      market: input.market,
-      currentPrice: 0,
-      previousClose: 0,
-      dayChange: 0,
-      dayChangePct: 0,
-      quantity: input.quantity,
-      marketValue: input.marketValue,
-      sma20: null, sma60: null, sma120: null, sma240: null,
-      aboveSma20: null, aboveSma60: null, aboveSma120: null, aboveSma240: null,
-      distSma20Pct: null, distSma60Pct: null, distSma120Pct: null, distSma240Pct: null,
-      rsi14: null,
-      bbUpper: null, bbMiddle: null, bbLower: null, bbPosition: null,
-      pivot: null,
-      week52High: input.week52High, week52Low: input.week52Low, week52Position: null,
-      signals: [],
-    };
+    throw new Error('沒有有效價格，無法分析');
   }
 
   const currentPrice = closes[closes.length - 1];
@@ -161,11 +144,8 @@ export function analyzeStock(input: AnalysisInput): StockAnalysis {
     ? (currentPrice - bbLowerVal) / (bbUpperVal - bbLowerVal)
     : null;
 
-  // Pivot Points (from last complete bar)
-  const lastIdx = closes.length - 1;
-  const pivotResult = lastIdx >= 0 
-    ? calculatePivot(highs[lastIdx], lows[lastIdx], closes[lastIdx], 'classic')
-    : null;
+  const levels = supportResistance(input.bars);
+  const pivotResult = levels.pivot;
 
   // 52-week range position
   const w52High = input.week52High;
@@ -194,10 +174,10 @@ export function analyzeStock(input: AnalysisInput): StockAnalysis {
   }
   if (w52Low !== null && w52High !== null && w52High !== w52Low) {
     const range = w52High - w52Low;
-    if (currentPrice - w52Low < range * 0.05) {
+    if (currentPrice - w52Low < range * 0.15) {
       signals.push({ ...SIGNAL_DEFINITIONS.near_52w_low, type: 'near_52w_low' });
     }
-    if (w52High - currentPrice < range * 0.05) {
+    if (w52High - currentPrice < range * 0.15) {
       signals.push({ ...SIGNAL_DEFINITIONS.near_52w_high, type: 'near_52w_high' });
     }
   }
@@ -213,6 +193,10 @@ export function analyzeStock(input: AnalysisInput): StockAnalysis {
     displayName: input.displayName,
     market: input.market,
     currentPrice,
+    latestTradingDate: input.bars[input.bars.length - 1]?.tradingDate || '',
+    provisional: input.bars[input.bars.length - 1]?.completion !== 'closed',
+    support: levels.support,
+    resistance: levels.resistance,
     previousClose,
     dayChange,
     dayChangePct,

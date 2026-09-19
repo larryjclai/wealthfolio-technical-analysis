@@ -24,12 +24,13 @@ export const ScreenerBar: React.FC<Props> = ({ activeFilters, onToggle, analyses
         const isActive = activeFilters.includes(st.type);
         const count = counts.get(st.type) || 0;
         const colorClass = st.sentiment === 'bullish' 
-          ? (isActive ? 'bg-green-500/20 text-green-400 border-green-500/40' : 'text-green-400/60 border-zinc-700 hover:border-green-500/40')
-          : (isActive ? 'bg-red-500/20 text-red-400 border-red-500/40' : 'text-red-400/60 border-zinc-700 hover:border-red-500/40');
+          ? (isActive ? 'bg-green-500/20 text-green-400 border-green-500/40' : 'text-green-400 border-zinc-700 hover:border-green-500/40')
+          : (isActive ? 'bg-red-500/20 text-red-400 border-red-500/40' : 'text-red-400 border-zinc-700 hover:border-red-500/40');
         
         return (
           <button
             key={st.type}
+            aria-pressed={isActive}
             onClick={() => onToggle(st.type)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 ${colorClass}`}
           >
