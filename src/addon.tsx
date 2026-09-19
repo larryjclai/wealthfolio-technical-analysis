@@ -4,15 +4,15 @@ import TechnicalAnalysisPage from './pages/TechnicalAnalysisPage';
 import HoldingsOverviewPage from './pages/HoldingsOverviewPage';
 import './index.css';
 import { HostAdapter } from './host/HostAdapter';
-import { AlertHistory } from './components/AlertHistory';
+import { NotificationBell, NotificationCenter } from './components/NotificationCenter';
 import { TrailingStopStore } from './alerts/TrailingStopStore';
-import { TrailingStopSummary } from './components/TrailingStopPanel';
 import { Market } from './market-data/types';
 
 const TechnicalAnalysisApp: React.FC<{host: HostAdapter; store: TrailingStopStore}> = ({ host, store }) => {
   const [currentView, setCurrentView] = useState<'overview' | 'chart'>('overview');
   const [selectedStock, setSelectedStock] = useState<{ symbol: string; market: Market } | null>(null);
   const overviewScroll = useRef(0);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [stopState, setStopState] = useState(store.state);
   useEffect(() => store.subscribe(setStopState), [store]);
   useEffect(() => {
@@ -39,17 +39,18 @@ const TechnicalAnalysisApp: React.FC<{host: HostAdapter; store: TrailingStopStor
     setSelectedStock({ symbol, market: market as Market });
     setCurrentView('chart');
   };
-  const summary = <><TrailingStopSummary store={store} state={stopState} onSelect={select} /><AlertHistory events={stopState.events} droppedEvents={stopState.droppedEvents} /></>;
+  const notificationAction = <NotificationBell state={stopState} onClick={() => setNotificationsOpen(true)} expanded={notificationsOpen} />;
   // Keep the overview mounted so quotes, filters, sorting and table scroll survive chart navigation.
   return <>
     <div hidden={currentView !== 'overview'}>
-      <HoldingsOverviewPage host={host} summary={summary} onNavigateToChart={select} />
+      <HoldingsOverviewPage host={host} headerActions={notificationAction} onNavigateToChart={select} />
     </div>
     {currentView === 'chart' && <TechnicalAnalysisPage
-      host={host} stopStore={store} stopState={stopState} summary={summary}
+      host={host} stopStore={store} stopState={stopState} headerActions={notificationAction}
       initialSymbol={selectedStock?.symbol} initialMarket={selectedStock?.market}
       onBack={() => setCurrentView('overview')}
     />}
+    <NotificationCenter open={notificationsOpen} onClose={() => setNotificationsOpen(false)} store={store} state={stopState} onSelect={select} />
   </>;
 };
 

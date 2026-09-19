@@ -40,7 +40,7 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
   }, [analyses, sortField, sortDir]);
 
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <span className="text-zinc-600 ml-1">↕</span>;
+    if (sortField !== field) return <span className="text-zinc-400 ml-1">↕</span>;
     return <span className="text-zinc-300 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>;
   };
 
@@ -49,7 +49,7 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
   };
 
   const MaCell = ({ value, above, distPct }: { value: number | null; above: boolean | null; distPct: number | null }) => {
-    if (value === null) return <td className="px-3 py-3 text-zinc-600 text-center">—</td>;
+    if (value === null) return <td className="px-3 py-3 text-zinc-400 text-center">—</td>;
     const color = above ? 'text-green-400' : 'text-red-400';
     const arrow = above ? '▲' : '▼';
     return (
@@ -59,7 +59,7 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
           <span className="text-[10px] ml-1">{arrow}</span>
         </div>
         {distPct !== null && (
-          <div className="text-[10px] text-zinc-500">
+          <div className="text-[10px] text-zinc-400">
             {distPct > 0 ? '+' : ''}{distPct.toFixed(1)}%
           </div>
         )}
@@ -68,7 +68,7 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
   };
 
   const RsiCell = ({ value }: { value: number | null }) => {
-    if (value === null) return <td className="px-3 py-3 text-zinc-600 text-center">—</td>;
+    if (value === null) return <td className="px-3 py-3 text-zinc-400 text-center">—</td>;
     let color = 'text-zinc-300';
     let bg = '';
     if (value > 70) { color = 'text-red-400'; bg = 'bg-red-500/10'; }
@@ -82,7 +82,7 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
 
   if (analyses.length === 0) {
     return (
-      <div className="text-center py-12 text-zinc-500">
+      <div className="text-center py-12 text-zinc-400">
         <p className="text-lg mb-2">{filtered ? '沒有符合篩選條件的股票' : '目前沒有可用的持倉分析'}</p>
         <p className="text-sm">{filtered ? '請清除或調整篩選條件' : '請確認持倉，或檢查上方的行情載入訊息'}</p>
       </div>
@@ -92,7 +92,7 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
   return (
     <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="holdings-table w-full text-xs">
           <thead className="bg-zinc-800/50 text-zinc-400 text-xs">
             <tr>
               <th className="px-3 py-3 text-left cursor-pointer hover:text-zinc-200 transition-colors" onClick={() => handleSort('symbol')}>
@@ -104,8 +104,8 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
               <th className="px-3 py-3 text-right cursor-pointer hover:text-zinc-200 transition-colors" onClick={() => handleSort('dayChangePct')}>
                 漲跌% <SortIcon field="dayChangePct" />
               </th>
-              <th className="px-3 py-3 text-right">20日區間支撐</th>
-              <th className="px-3 py-3 text-right">20日區間壓力</th>
+              <th className="px-3 py-3 text-right">區間支撐<span className="block text-[10px] font-normal">20 日</span></th>
+              <th className="px-3 py-3 text-right">區間壓力<span className="block text-[10px] font-normal">20 日</span></th>
               <th className="px-3 py-3 text-right">MA20</th>
               <th className="px-3 py-3 text-right">MA60</th>
               <th className="px-3 py-3 text-right">MA120</th>
@@ -130,24 +130,24 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
               >
                 {/* Stock name */}
                 <td className="px-3 py-3">
-                  <button className="font-medium text-zinc-100 flex items-center gap-1.5 text-left" onClick={event => { event.stopPropagation(); onSelectStock(a.symbol, a.market); }}>
+                  <button className="font-medium text-sm text-zinc-100 flex items-center gap-1.5 text-left" onClick={event => { event.stopPropagation(); onSelectStock(a.symbol, a.market); }}>
                     {a.displayName && a.displayName !== a.symbol ? (
                       <>
-                        <span className="truncate max-w-[140px]">{a.displayName}</span>
+                        <span className="truncate max-w-[160px]">{a.displayName}</span>
                         <span className="text-xs text-zinc-400 font-mono">({a.symbol})</span>
                       </>
                     ) : (
                       <span>{a.symbol}</span>
                     )}
                   </button>
-                  <div className="text-[10px] text-zinc-500 font-mono">
+                  <div className="text-[10px] text-zinc-400 font-mono">
                     {a.market}
                   </div>
                 </td>
                 {/* Current price */}
-                <td className="px-3 py-3 text-right tabular-nums font-medium text-zinc-100">
+                <td className="px-3 py-3 text-right tabular-nums text-xs font-normal text-zinc-100">
                   {formatPrice(a.currentPrice)}
-                  <div className="text-xs text-zinc-400 font-normal">{a.latestTradingDate}{a.provisional ? ' · 未收盤' : ''}</div>
+                  <div className="text-[11px] text-zinc-400 font-normal whitespace-nowrap">{a.latestTradingDate}{a.provisional ? ' · 未收盤' : ''}</div>
                 </td>
                 {/* Day change */}
                 <td className={`px-3 py-3 text-right tabular-nums text-xs font-medium ${
@@ -155,8 +155,8 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
                 }`}>
                   {a.dayChangePct > 0 ? '+' : ''}{a.dayChangePct.toFixed(2)}%
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums text-cyan-300">{a.support?.toFixed(2) ?? '—'}</td>
-                <td className="px-3 py-3 text-right tabular-nums text-orange-300">{a.resistance?.toFixed(2) ?? '—'}</td>
+                <td className="px-3 py-3 text-right tabular-nums text-xs text-cyan-300">{a.support?.toFixed(2) ?? '—'}</td>
+                <td className="px-3 py-3 text-right tabular-nums text-xs text-orange-300">{a.resistance?.toFixed(2) ?? '—'}</td>
                 {/* Moving Averages */}
                 <MaCell value={a.sma20} above={a.aboveSma20} distPct={a.distSma20Pct} />
                 <MaCell value={a.sma60} above={a.aboveSma60} distPct={a.distSma60Pct} />
@@ -170,7 +170,7 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
                 </td>
                 {/* Signals */}
                 <td className="px-3 py-3">
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1 min-w-28 max-w-44">
                     {a.signals.map((sig, i) => (
                       <span
                         key={i}

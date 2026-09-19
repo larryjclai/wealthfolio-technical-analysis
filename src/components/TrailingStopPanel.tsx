@@ -43,17 +43,18 @@ export function TrailingStopSummary({ store, state, onSelect }: { store: Trailin
   const acknowledge = async (symbol: string) => {
     try { await store.acknowledge(symbol); setActionError(''); } catch (error) { setActionError(String(error)); }
   };
-  return <section className="mb-6 p-4 border border-zinc-800 rounded-xl bg-zinc-900" aria-label="移動停利追蹤清單">
+  return <section aria-label="移動停利追蹤清單">
     <h2 className="font-medium mb-2">移動停利 · {state.rules.length} 檔</h2>
     <div className="flex flex-wrap items-center gap-3 mb-2 text-sm">
       <span role="status">{!state.ready ? '等待設定載入' : state.checking ? '正在檢查已收盤日 K…' : '每日收盤檢查'}</span>
       <button disabled={!state.ready || state.checking || !state.rules.length} onClick={() => void store.poll(true)} className="px-3 py-1.5 border border-zinc-600 rounded-lg disabled:opacity-50">立即檢查日 K</button>
     </div>
-    <p className="text-sm text-zinc-400">每日首次開啟或回到套件時，依各股票市場日期掃描一次最近已收盤日 K。休市沿用上一交易日，不重複提醒；不在背景定時檢查。若今天已掃描，收盤後可按「立即檢查日 K」。</p>
+    <details className="text-xs text-zinc-400 mt-3"><summary className="cursor-pointer py-2">每日檢查方式</summary><p className="leading-relaxed mt-1">每日首次開啟或回到套件時，依各股票市場日期掃描一次最近已收盤日 K。休市沿用上一交易日，不重複提醒；不在背景定時檢查。若今天已掃描，收盤後可按「立即檢查日 K」。</p></details>
     <p className="text-xs text-zinc-400 mt-2">本次開啟最近檢查：{state.lastCompletedAt ? new Date(state.lastCompletedAt).toLocaleString() : '尚未完成'}</p>
     {(state.error || actionError) && <p role="alert" className="mt-3 text-red-400">{state.error || actionError}</p>}
     {!state.ready && !state.error && <p role="status" className="mt-3 text-zinc-400">正在載入提醒設定…</p>}
     {state.error && !state.ready && <button className="mt-2 underline" onClick={() => void store.initialize().then(() => store.poll())}>重試載入設定</button>}
+    {state.ready && state.rules.length === 0 && <p className="py-8 text-sm text-zinc-400 leading-relaxed">尚未追蹤股票。進入個股頁，在圖表下方設定回落百分比，即可啟用移動停利提醒。</p>}
     {state.rules.length > 0 && <ul className="divide-y divide-zinc-800 mt-3">
       {state.rules.map(rule => <li key={rule.instrument.providerSymbol} className="py-3 flex flex-wrap items-center justify-between gap-3 text-sm">
         <div>

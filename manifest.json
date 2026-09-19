@@ -1,7 +1,7 @@
 {
   "id": "wealthfolio-technical-analysis",
   "name": "Technical Analysis",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "持倉技術分析、成本線、買賣紀錄與每日收盤移動停利提醒",
   "author": "juicheng",
   "main": "dist/addon.js",

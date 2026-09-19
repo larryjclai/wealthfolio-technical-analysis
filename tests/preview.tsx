@@ -22,13 +22,21 @@ const ctx = {
   onDisable: (callback: () => void) => { disabled = callback; },
   api: {
     accounts: { getAll: async () => [{ id: 'demo-a', isActive: true }, { id: 'demo-b', isActive: true }] },
-    portfolio: { getHoldings: async (accountId: string) => [{ id: accountId, accountId, holdingType: 'security', instrument: { symbol: 'AMD', name: 'AMD', currency: 'USD', quoteMode: 'MARKET' }, quantity: accountId === 'demo-a' ? 10 : 30, costBasis: { local: accountId === 'demo-a' ? 1000 : 6000, base: 0 }, asOfDate: '2026-09-18', localCurrency: 'USD', marketValue: { local: 2000, base: 2000 } }] },
+    portfolio: { getHoldings: async (accountId: string) => [
+      { id: accountId, accountId, holdingType: 'security', instrument: { symbol: 'AMD', name: 'AMD', currency: 'USD', quoteMode: 'MARKET' }, quantity: accountId === 'demo-a' ? 10 : 30, costBasis: { local: accountId === 'demo-a' ? 1000 : 6000, base: 0 }, asOfDate: '2026-09-18', localCurrency: 'USD', marketValue: { local: 2000, base: 2000 } },
+      ...(accountId === 'demo-a' ? [
+        ['0050.TW', '測試 ETF', 100], ['009826.TW', '測試長名稱 ETF', 500], ['2345.TW', '測試高價股', 20],
+      ].map(([symbol, name, quantity]) => ({ id: String(symbol), accountId, holdingType: 'security', instrument: { symbol, name, currency: 'TWD', quoteMode: 'MARKET' }, quantity, costBasis: { local: Number(quantity) * 100, base: 0 }, asOfDate: '2026-09-18', localCurrency: 'TWD', marketValue: { local: 2000, base: 2000 } })) : []),
+    ] },
     activities: { getAll: async () => activities },
     storage: { get: async (key: string) => values.get(key) ?? null, set: async (key: string, value: string) => { values.set(key, value); } },
     toast: { warning: (message: string) => showToast(message) },
-    network: { request: async () => {
+    network: { request: async ({url}: {url: string}) => {
       updateRequests(++requests);
-      return { status: 200, body: JSON.stringify({ chart: { result: [{ timestamp: timestamps, meta: { currency: 'USD', exchangeTimezoneName: 'America/New_York' }, indicators: { quote: [quote] } }] } }) };
+      const symbol = decodeURIComponent(new URL(url).pathname.split('/').pop() || 'AMD');
+      const scale = symbol === '2345.TW' ? 10 : symbol === '009826.TW' ? .053 : symbol === '0050.TW' ? .6 : 1;
+      const scaledQuote = { ...quote, ...Object.fromEntries(['open', 'high', 'low', 'close'].map(key => [key, quote[key as 'close'].map(value => value * scale)])) };
+      return { status: 200, body: JSON.stringify({ chart: { result: [{ timestamp: timestamps, meta: { currency: symbol.endsWith('.TW') ? 'TWD' : 'USD', exchangeTimezoneName: symbol.endsWith('.TW') ? 'Asia/Taipei' : 'America/New_York' }, indicators: { quote: [scaledQuote] } }] } }) };
     } },
   },
 };

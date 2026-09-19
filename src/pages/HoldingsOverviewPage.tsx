@@ -8,11 +8,11 @@ import { ScreenerBar } from '../components/ScreenerBar';
 
 interface Props {
   host: HostAdapter;
-  summary?: React.ReactNode;
+  headerActions?: React.ReactNode;
   onNavigateToChart?: (symbol: string, market: string) => void;
 }
 
-const HoldingsOverviewPage: React.FC<Props> = ({ host, onNavigateToChart, summary }) => {
+const HoldingsOverviewPage: React.FC<Props> = ({ host, onNavigateToChart, headerActions }) => {
   const generation = useRef(0);
   const [failures, setFailures] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -165,19 +165,19 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, onNavigateToChart, summar
   const bearishCount = analyses.filter(a => a.signals.some(s => s.sentiment === 'bearish')).length;
 
   return (
-    <div className="p-6 bg-zinc-950 text-zinc-100 min-h-screen font-sans">
+    <div className="p-4 sm:p-6 bg-zinc-950 text-zinc-100 min-h-screen font-sans">
       <div className="max-w-full mx-auto">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">持倉技術分析</h1>
-            <p className="text-sm text-zinc-500 mt-1">
+            <p className="text-sm text-zinc-400 mt-1">
               {analyses.length > 0
                 ? `${analyses.length} 檔持倉 · ${totalSignals} 個訊號（${bullishCount} 多方 / ${bearishCount} 空方）`
                 : loading ? '載入中…' : '尚無可顯示的分析'}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
           {onNavigateToChart && <button onClick={() => onNavigateToChart('2330', 'TWSE')} className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm">查詢股票</button>}
           <button
             onClick={loadHoldings}
@@ -188,12 +188,13 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, onNavigateToChart, summar
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             {loading ? '同步中...' : '重新整理'}
-          </button></div>
+          </button>{headerActions}</div>
         </div>
 
-        {summary}
-        <p className="text-xs text-zinc-400 mb-4">價格為最新日 K，可能延遲；漲跌為相對前一筆有效日 K。20 日區間支撐／壓力採最新交易日前的低／高點，是短期參考，並非所有市場通用的支撐壓力標準。休市沿用最近交易日。</p>
-        <p className="text-xs text-zinc-400 mb-4">區間支撐／壓力看前 20 日最低／最高價；MA20（SMA20）看最近 20 日收盤平均，包含最新日 K，未收盤時會變動。</p>
+        <details className="mb-4 text-xs text-zinc-400"><summary className="cursor-pointer w-fit py-2">行情與指標說明</summary>
+        <p className="text-xs text-zinc-400 mt-2 max-w-prose">價格為最新日 K，可能延遲；漲跌為相對前一筆有效日 K。20 日區間支撐／壓力採最新交易日前的低／高點，是短期參考，並非所有市場通用的支撐壓力標準。休市沿用最近交易日。</p>
+        <p className="text-xs text-zinc-400 mt-2 max-w-prose">區間支撐／壓力看前 20 日最低／最高價；MA20（SMA20）看最近 20 日收盤平均，包含最新日 K，未收盤時會變動。</p>
+        </details>
         {failures.length > 0 && <div role="alert" className="mb-4 text-sm text-amber-300">有 {failures.length} 檔暫無可用行情。請核對代碼與市場，網路錯誤可重新整理重試：<ul>{failures.map((failure, i) => <li key={i}>{failure}</li>)}</ul></div>}
         {warnings.length > 0 && <details className="mb-4 text-sm text-zinc-400"><summary>行情注意事項（{warnings.length}）</summary><ul>{warnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul></details>}
         {/* Loading progress */}
@@ -203,7 +204,7 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, onNavigateToChart, summar
               <span className="text-sm text-zinc-400">
                 正在分析 <span className="text-zinc-200 font-medium">{progress.symbol}</span>
               </span>
-              <span className="text-xs text-zinc-500">{progress.current} / {progress.total}</span>
+              <span className="text-xs text-zinc-400">{progress.current} / {progress.total}</span>
             </div>
             <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
               <div
@@ -234,7 +235,7 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, onNavigateToChart, summar
 
         {/* Filter status */}
         {activeFilters.length > 0 && (
-          <div className="mb-4 text-xs text-zinc-500">
+          <div className="mb-4 text-xs text-zinc-400">
             篩選結果: 顯示 {filteredAnalyses.length} / {analyses.length} 檔
           </div>
         )}

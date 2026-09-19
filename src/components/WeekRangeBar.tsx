@@ -1,38 +1,21 @@
 import React from 'react';
 
-interface Props {
-  low: number | null;
-  high: number | null;
-  current: number;
-}
-
+interface Props { low: number | null; high: number | null; current: number; }
+const price = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 2 });
 export const WeekRangeBar: React.FC<Props> = ({ low, high, current }) => {
-  if (low === null || high === null || high === low) {
-    return <span className="text-zinc-500 text-xs">—</span>;
+  if (low === null || high === null || ![low, high, current].every(Number.isFinite) || high <= low) {
+    return <span className="text-zinc-400 text-xs">—</span>;
   }
-  
   const position = Math.max(0, Math.min(1, (current - low) / (high - low)));
   const pct = Math.round(position * 100);
-  
-  return (
-    <div className="flex items-center gap-2 min-w-[120px]">
-      <span className="text-[10px] text-zinc-500 w-12 text-right tabular-nums">{low.toFixed(0)}</span>
-      <div className="flex-1 relative h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-        {/* Gradient fill */}
-        <div 
-          className="absolute inset-y-0 left-0 rounded-full"
-          style={{ 
-            width: `${pct}%`,
-            background: position < 0.3 ? '#ef4444' : position > 0.7 ? '#22c55e' : '#a1a1aa'
-          }}
-        />
-        {/* Current position marker */}
-        <div 
-          className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white border border-zinc-600 shadow-sm"
-          style={{ left: `calc(${pct}% - 4px)` }}
-        />
-      </div>
-      <span className="text-[10px] text-zinc-500 w-12 tabular-nums">{high.toFixed(0)}</span>
+  const label = `52 週最低 ${price(low)}，最高 ${price(high)}，目前 ${price(current)}${current < low ? '，低於區間' : current > high ? '，高於區間' : `，位於區間 ${pct}%`}`;
+  return <div className="week-range" role="img" aria-label={label} title={label}>
+    <div className="week-range-track">
+      <div className="h-full rounded-full bg-zinc-500" style={{ width: `${pct}%` }} />
+      <span className="week-range-marker" style={{ left: `clamp(4px, ${pct}%, calc(100% - 4px))` }} />
     </div>
-  );
+    <div className="mt-1.5 flex justify-between gap-3 text-[11px] leading-4 text-zinc-400 tabular-nums">
+      <span>{price(low)}</span><span>{price(high)}</span>
+    </div>
+  </div>;
 };

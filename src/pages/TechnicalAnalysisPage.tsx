@@ -26,9 +26,9 @@ interface Props {
   onBack?: () => void;
   stopStore: TrailingStopStore;
   stopState: StopState;
-  summary?: React.ReactNode;
+  headerActions?: React.ReactNode;
 }
-const TechnicalAnalysisPage: React.FC<Props> = ({ host, initialSymbol, initialMarket, onBack, stopStore, stopState, summary }) => {
+const TechnicalAnalysisPage: React.FC<Props> = ({ host, initialSymbol, initialMarket, onBack, stopStore, stopState, headerActions }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const rsiContainerRef = useRef<HTMLDivElement>(null);
   const generation = useRef(0);
@@ -163,6 +163,7 @@ const TechnicalAnalysisPage: React.FC<Props> = ({ host, initialSymbol, initialMa
       <div className="flex flex-wrap items-center gap-4 mb-6">
         {onBack && <button onClick={onBack} className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm">← 返回總覽</button>}
         <h1 className="text-2xl font-bold">{displayName} <span className="text-base font-normal text-zinc-400">{instrument?.market}</span></h1>
+        <div className="ml-auto">{headerActions}</div>
       </div>
       <div className="flex flex-col gap-4 mb-4">
         <SymbolPicker onSelect={loadData} defaultSymbol={initialSymbol || '2330'} defaultMarket={initialMarket || 'TWSE'} />
@@ -202,7 +203,6 @@ const TechnicalAnalysisPage: React.FC<Props> = ({ host, initialSymbol, initialMa
         {unmatchedCount > 0 && <p className="text-sm text-amber-300 mb-3">{unmatchedCount} 筆交易不在目前行情日期內，保留於下表，不移動到其他日期。</p>}
         {trades.length > 0 && <div className="overflow-x-auto max-h-80"><table className="w-full text-sm text-left tabular-nums"><thead className="text-zinc-400"><tr>{['日期', '買賣', '股數', '成交價', '帳戶'].map(label => <th className="p-2" key={label}>{label}</th>)}</tr></thead><tbody>{trades.map(t => <tr key={t.id} className="border-t border-zinc-800"><td className="p-2">{t.date}</td><td className="p-2" style={{ color: t.side === 'BUY' ? chartColors.buy : chartColors.sell }}>{t.side === 'BUY' ? '▲ 買入' : '▼ 賣出'}</td><td className="p-2">{t.quantity}</td><td className="p-2">{t.price.toFixed(2)} {t.currency}</td><td className="p-2">{t.account}</td></tr>)}</tbody></table></div>}
       </section>
-      {summary}
     </div>
   </div>;
 };

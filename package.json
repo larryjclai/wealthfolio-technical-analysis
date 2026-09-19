@@ -1,6 +1,6 @@
 {
   "name": "wealthfolio-technical-analysis",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Technical Analysis Addon for Wealthfolio",
   "type": "module",
   "scripts": {
