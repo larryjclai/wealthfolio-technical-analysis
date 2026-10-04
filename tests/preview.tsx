@@ -17,6 +17,7 @@ let disabled = () => {};
 let updateRequests = (_count: number) => {};
 let showToast = (_message: string) => {};
 let requests = 0;
+let failQuotes = false;
 const ctx = {
   router: { add: ({ component }: { component: React.ComponentType }) => { Route = component; } },
   onDisable: (callback: () => void) => { disabled = callback; },
@@ -34,6 +35,7 @@ const ctx = {
     network: { request: async ({url}: {url: string}) => {
       updateRequests(++requests);
       const symbol = decodeURIComponent(new URL(url).pathname.split('/').pop() || 'AMD');
+      if (failQuotes && symbol === '2345.TW') return { status: 404, body: '{}' };
       const scale = symbol === '2345.TW' ? 10 : symbol === '009826.TW' ? .053 : symbol === '0050.TW' ? .6 : 1;
       const scaledQuote = { ...quote, ...Object.fromEntries(['open', 'high', 'low', 'close'].map(key => [key, quote[key as 'close'].map(value => value * scale)])) };
       return { status: 200, body: JSON.stringify({ chart: { result: [{ timestamp: timestamps, meta: { currency: symbol.endsWith('.TW') ? 'TWD' : 'USD', exchangeTimezoneName: symbol.endsWith('.TW') ? 'Asia/Taipei' : 'America/New_York' }, indicators: { quote: [scaledQuote] } }] } }) };
@@ -55,6 +57,7 @@ function PreviewHost() {
         const last = quote.close.length - 1; quote.close[last] = closes[last] * 0.7; quote.low[last] = quote.close[last]; setDropped(true);
       }}>{dropped ? '已模擬跌價 30%' : '模擬跌價 30%'}</button>
       <button className="border border-blue-300 px-3 py-1 rounded" disabled={stopped} onClick={() => { disabled(); setVisible(false); setStopped(true); }}>停用套件</button>
+      <button className="border border-blue-300 px-3 py-1 rounded" onClick={() => { failQuotes = !failQuotes; }}>切換行情失敗（重新整理後生效）</button>
       <span>行情請求次數：{count}</span>
     </nav>
     {toast && <p role="alert" className="p-3 bg-amber-950 text-amber-200">{toast}</p>}

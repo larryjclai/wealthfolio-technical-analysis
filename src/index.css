@@ -17,3 +17,7 @@
 .notification-drawer::backdrop { background: rgb(0 0 0 / 45%); }
 .notification-drawer[open] { animation: drawer-enter 160ms ease-out; }
 @keyframes drawer-enter { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+
+.market-data-notice { margin: 76px 24px auto auto; padding: 20px; width: min(520px, calc(100% - 32px)); max-width: calc(100% - 32px); max-height: calc(100dvh - 100px); border: 1px solid #3f3f46; border-radius: 12px; background: #18181b; color: #f4f4f5; overflow-y: auto; overscroll-behavior: contain; }
+.market-data-notice::backdrop { background: rgb(0 0 0 / 35%); }
+@media (max-width: 640px) { .market-data-notice { margin-right: 16px; } }

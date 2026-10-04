@@ -30,6 +30,7 @@ export const ScreenerBar: React.FC<Props> = ({ activeFilters, onToggle, analyses
         return (
           <button
             key={st.type}
+            title={st.type === 'near_52w_low' ? '位於 52 週高低區間底部 15%，不代表已創新低' : st.type === 'near_52w_high' ? '位於 52 週高低區間頂部 15%，不代表已創新高' : undefined}
             aria-pressed={isActive}
             onClick={() => onToggle(st.type)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 ${colorClass}`}
