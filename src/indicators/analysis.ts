@@ -65,6 +65,10 @@ export interface StockAnalysis {
 }
 
 export type SignalType = 
+  | 'above_sma5'
+  | 'below_sma5'
+  | 'sma5_cross_above_sma20'
+  | 'sma5_cross_below_sma20'
   | 'above_sma20'
   | 'below_sma20'
   | 'cross_above_sma20'
@@ -86,6 +90,10 @@ export interface Signal {
 }
 
 const SIGNAL_DEFINITIONS: Record<SignalType, { label: string; sentiment: Signal['sentiment'] }> = {
+  above_sma5: { label: '高於 MA5', sentiment: 'bullish' },
+  below_sma5: { label: '低於 MA5', sentiment: 'bearish' },
+  sma5_cross_above_sma20: { label: 'MA5 上穿 MA20', sentiment: 'bullish' },
+  sma5_cross_below_sma20: { label: 'MA5 下穿 MA20', sentiment: 'bearish' },
   above_sma20: { label: '高於 MA20', sentiment: 'bullish' },
   below_sma20: { label: '低於 MA20', sentiment: 'bearish' },
   cross_above_sma20: { label: '收盤突破 MA20', sentiment: 'bullish' },
@@ -138,6 +146,7 @@ export function analyzeStock(input: AnalysisInput): StockAnalysis {
   const dayChangePct = previousClose !== 0 ? (dayChange / previousClose) * 100 : 0;
 
   // Moving Averages
+  const sma5Val = lastValue(sma(closes, 5));
   const sma20Val = lastValue(sma(closes, 20));
   const sma60Val = lastValue(sma(closes, 60));
   const sma120Val = lastValue(sma(closes, 120));
@@ -177,6 +186,24 @@ export function analyzeStock(input: AnalysisInput): StockAnalysis {
       reasons: [...observation.reasons, `行情已略過 ${input.rejectedBars} 筆異常日 K，請先核對資料完整性`] };
   }
 
+  if (sma5Val !== null && currentPrice > sma5Val) {
+    signals.push({ ...SIGNAL_DEFINITIONS.above_sma5, type: 'above_sma5' });
+  }
+  if (sma5Val !== null && currentPrice < sma5Val) {
+    signals.push({ ...SIGNAL_DEFINITIONS.below_sma5, type: 'below_sma5' });
+  }
+  const closedCloses = input.bars.filter(bar => bar.completion === 'closed').map(bar => bar.close);
+  if (closedCloses.length >= 21) {
+    const ma5 = sma(closedCloses, 5), ma20 = sma(closedCloses, 20);
+    const latest = closedCloses.length - 1;
+    const prior5 = ma5[latest - 1]!, prior20 = ma20[latest - 1]!;
+    if (prior5 <= prior20 && ma5[latest]! > ma20[latest]!) {
+      signals.push({ ...SIGNAL_DEFINITIONS.sma5_cross_above_sma20, type: 'sma5_cross_above_sma20' });
+    }
+    if (prior5 >= prior20 && ma5[latest]! < ma20[latest]!) {
+      signals.push({ ...SIGNAL_DEFINITIONS.sma5_cross_below_sma20, type: 'sma5_cross_below_sma20' });
+    }
+  }
   if (sma20Val !== null && currentPrice > sma20Val) {
     signals.push({ ...SIGNAL_DEFINITIONS.above_sma20, type: 'above_sma20' });
   }

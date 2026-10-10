@@ -69,7 +69,7 @@ export const ScreenerBar: React.FC<Props> = ({ activeFilters, onToggle, analyses
         </button>
       )}
       </div>
-      <p className="mt-3 text-xs text-zinc-400 leading-relaxed">均線位置採最新行情；突破／跌破 MA20 採最近兩筆已收盤日 K，不代表盤中交叉。每個數字是該條件單獨符合的檔數。</p>
+      <p className="mt-3 text-xs text-zinc-400 leading-relaxed">MA5 為可選短線條件，未勾選就不限制；不改變觀察分類。均線位置採最新行情；突破／跌破 MA20 與 MA5／MA20 交叉採最近兩筆已收盤日 K。每個數字是該條件單獨符合的檔數。</p>
     </div>
   );
 };
