@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo, useId } from 'react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@wealthfolio/ui';
 import { HostAdapter } from '../host/HostAdapter';
 import { SymbolPicker } from '../components/SymbolPicker';
 import { PivotTable } from '../components/PivotTable';
@@ -45,6 +46,7 @@ const TechnicalAnalysisPage: React.FC<Props> = ({ host, initialSymbol, initialMa
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pivotType, setPivotType] = useState<PivotType>('classic');
+  const pivotTypeId = useId();
   const bars = history?.bars;
   const levels = useMemo(() => supportResistance(bars || [], pivotType), [bars, pivotType]);
   const rule = stopState.rules.find(r => r.instrument.providerSymbol === instrument?.providerSymbol);
@@ -193,7 +195,13 @@ const TechnicalAnalysisPage: React.FC<Props> = ({ host, initialSymbol, initialMa
           setHistory(fresh);
           return fresh;
         }} />
-        <label className="text-sm text-zinc-300 block mb-3">Pivot 計算方式 <select className="ml-2 bg-zinc-800 border border-zinc-700 rounded-lg p-2" value={pivotType} onChange={e => setPivotType(e.target.value as PivotType)}><option value="classic">Classic</option><option value="fibonacci">Fibonacci</option></select></label>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-300 mb-3">
+          <label htmlFor={pivotTypeId}>Pivot 計算方式</label>
+          <Select value={pivotType} onValueChange={value => setPivotType(value as PivotType)}>
+            <SelectTrigger id={pivotTypeId} className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="classic">Classic</SelectItem><SelectItem value="fibonacci">Fibonacci</SelectItem></SelectContent>
+          </Select>
+        </div>
         <PivotTable pivot={levels.pivot} baseDate={levels.baseDate} />
       </>}
       <section className="my-6" aria-label="實際買賣紀錄">

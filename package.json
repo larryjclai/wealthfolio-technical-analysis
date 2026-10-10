@@ -1,6 +1,6 @@
 {
   "name": "wealthfolio-technical-analysis",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Comportfolio — Your portfolio compass.",
   "type": "module",
   "scripts": {
@@ -25,6 +25,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "@wealthfolio/addon-dev-tools": "^3.8.0",
     "@wealthfolio/addon-sdk": "latest",
+    "@wealthfolio/ui": "^3.8.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.2.2",
     "vite": "^5.1.4",

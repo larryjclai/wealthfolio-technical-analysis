@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useId } from 'react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@wealthfolio/ui';
 import { SignalType, StockAnalysis, getAllSignalTypes } from '../indicators/analysis';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 
 export const ScreenerBar: React.FC<Props> = ({ activeFilters, onToggle, analyses, matchMode, onMatchModeChange, onClear }) => {
   const signalTypes = getAllSignalTypes();
+  const matchModeId = useId();
   
   // Count how many stocks match each signal
   const counts = new Map<SignalType, number>();
@@ -24,12 +26,13 @@ export const ScreenerBar: React.FC<Props> = ({ activeFilters, onToggle, analyses
     <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <span className="text-sm text-zinc-200 font-medium">技術條件</span>
-        <label className="flex items-center gap-2 text-xs text-zinc-300">多選方式
-          <select value={matchMode} onChange={event => onMatchModeChange(event.target.value === 'all' ? 'all' : 'any')}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-zinc-100">
-            <option value="any">符合任一項</option><option value="all">全部符合</option>
-          </select>
-        </label>
+        <div className="flex items-center gap-2 text-xs text-zinc-300">
+          <label htmlFor={matchModeId}>多選方式</label>
+          <Select value={matchMode} onValueChange={value => onMatchModeChange(value === 'all' ? 'all' : 'any')}>
+            <SelectTrigger id={matchModeId} className="w-36"><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="any">符合任一項</SelectItem><SelectItem value="all">全部符合</SelectItem></SelectContent>
+          </Select>
+        </div>
       </div>
       <div className="flex flex-wrap gap-2">
       {signalTypes.map((st) => {

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { AddonContext } from '@wealthfolio/addon-sdk/types';
 import enable from '../src/addon';
+import './host-theme.css';
+document.documentElement.classList.add('dark');
 const timestamps: number[] = [];
 for (let i = 460; i > 0; i--) {
   const date = new Date(Date.now() - i * 86400000);

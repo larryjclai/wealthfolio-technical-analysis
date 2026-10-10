@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AddonEnableFunction } from '@wealthfolio/addon-sdk/types';
+import { Sheet } from '@wealthfolio/ui';
 import TechnicalAnalysisPage from './pages/TechnicalAnalysisPage';
 import HoldingsOverviewPage from './pages/HoldingsOverviewPage';
 import './index.css';
@@ -7,6 +8,7 @@ import { HostAdapter } from './host/HostAdapter';
 import { NotificationIndicator, NotificationCenter } from './components/NotificationCenter';
 import { TrailingStopStore } from './alerts/TrailingStopStore';
 import { Market } from './market-data/types';
+import type { MarketDataIssues } from './components/MarketDataNotice';
 
 const TechnicalAnalysisApp: React.FC<{host: HostAdapter; store: TrailingStopStore}> = ({ host, store }) => {
   const [currentView, setCurrentView] = useState<'overview' | 'chart'>('overview');
@@ -14,6 +16,7 @@ const TechnicalAnalysisApp: React.FC<{host: HostAdapter; store: TrailingStopStor
   const overviewScroll = useRef(0);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [stopState, setStopState] = useState(store.state);
+  const [marketData, setMarketData] = useState<MarketDataIssues>({ failures: [], warnings: [] });
   useEffect(() => store.subscribe(setStopState), [store]);
   useEffect(() => {
     let mounted = true;
@@ -39,19 +42,19 @@ const TechnicalAnalysisApp: React.FC<{host: HostAdapter; store: TrailingStopStor
     setSelectedStock({ symbol, market: market as Market });
     setCurrentView('chart');
   };
-  const notificationAction = <NotificationIndicator state={stopState} onClick={() => setNotificationsOpen(true)} expanded={notificationsOpen} />;
+  const notificationAction = <NotificationIndicator state={stopState} marketData={marketData} onClick={() => setNotificationsOpen(true)} expanded={notificationsOpen} />;
   // Keep the overview mounted so quotes, filters, sorting and table scroll survive chart navigation.
-  return <>
+  return <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
     <div hidden={currentView !== 'overview'}>
-      <HoldingsOverviewPage host={host} stopState={stopState} headerActions={notificationAction} onNavigateToChart={select} />
+      <HoldingsOverviewPage host={host} stopState={stopState} onMarketDataChange={setMarketData} headerActions={currentView === 'overview' ? notificationAction : undefined} onNavigateToChart={select} />
     </div>
     {currentView === 'chart' && <TechnicalAnalysisPage
       host={host} stopStore={store} stopState={stopState} headerActions={notificationAction}
       initialSymbol={selectedStock?.symbol} initialMarket={selectedStock?.market}
       onBack={() => setCurrentView('overview')}
     />}
-    <NotificationCenter open={notificationsOpen} onClose={() => setNotificationsOpen(false)} store={store} state={stopState} onSelect={select} />
-  </>;
+    <NotificationCenter open={notificationsOpen} onClose={() => setNotificationsOpen(false)} store={store} state={stopState} marketData={marketData} onSelect={select} />
+  </Sheet>;
 };
 
 const enable: AddonEnableFunction = (ctx) => {

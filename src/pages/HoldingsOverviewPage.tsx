@@ -5,20 +5,19 @@ import { YahooFinanceProvider } from '../market-data/YahooFinanceProvider';
 import { analyzeStock, StockAnalysis, SignalType, filterBySignals, AnalysisInput, withTrailingStopObservations } from '../indicators/analysis';
 import type { StopState } from '../alerts/TrailingStopStore';
 import { HoldingsTable } from '../components/HoldingsTable';
-import { MarketDataNotice } from '../components/MarketDataNotice';
+import type { MarketDataIssues } from '../components/MarketDataNotice';
 import { ScreenerBar } from '../components/ScreenerBar';
 
 interface Props {
   host: HostAdapter;
   stopState: StopState;
+  onMarketDataChange: (issues: MarketDataIssues) => void;
   headerActions?: React.ReactNode;
   onNavigateToChart?: (symbol: string, market: string) => void;
 }
 
-const HoldingsOverviewPage: React.FC<Props> = ({ host, stopState, onNavigateToChart, headerActions }) => {
+const HoldingsOverviewPage: React.FC<Props> = ({ host, stopState, onMarketDataChange, onNavigateToChart, headerActions }) => {
   const generation = useRef(0);
-  const [failures, setFailures] = useState<string[]>([]);
-  const [warnings, setWarnings] = useState<string[]>([]);
   const [analyses, setAnalyses] = useState<StockAnalysis[]>([]);
   const [activeFilters, setActiveFilters] = useState<SignalType[]>([]);
   const [matchMode, setMatchMode] = useState<'any' | 'all'>('any');
@@ -31,8 +30,7 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, stopState, onNavigateToCh
     const requestId = ++generation.current;
     const failed: string[] = [];
     const notices: string[] = [];
-    setFailures([]);
-    setWarnings([]);
+    onMarketDataChange({ failures: [], warnings: [] });
     setProgress({ current: 0, total: 0, symbol: '' });
     setLoading(true);
     setError(null);
@@ -134,8 +132,7 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, stopState, onNavigateToCh
       }
 
       if (requestId !== generation.current) return;
-      setFailures(failed);
-      setWarnings(notices);
+      onMarketDataChange({ failures: failed, warnings: notices });
       setAnalyses(results);
     } catch (e: any) {
       if (requestId !== generation.current) return;
@@ -143,7 +140,7 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, stopState, onNavigateToCh
     } finally {
       if (requestId === generation.current) setLoading(false);
     }
-  }, [host]);
+  }, [host, onMarketDataChange]);
 
   useEffect(() => {
     void loadHoldings();
@@ -200,7 +197,7 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, stopState, onNavigateToCh
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             {loading ? '同步中...' : '重新整理'}
-          </button><MarketDataNotice failures={failures} warnings={warnings} />{headerActions}</div>
+          </button>{headerActions}</div>
         </div>
 
         <details className="mb-4 text-xs text-zinc-400"><summary className="cursor-pointer w-fit py-2">行情與指標說明</summary>

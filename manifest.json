@@ -1,7 +1,7 @@
 {
   "id": "wealthfolio-technical-analysis",
   "name": "Comportfolio",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "看清持倉趨勢與風險。",
   "author": "juicheng",
   "main": "dist/addon.js",

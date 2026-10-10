@@ -1,8 +1,9 @@
-@import "tailwindcss";
+@import "@wealthfolio/ui/styles";
+@source "../node_modules/@wealthfolio/ui/dist/index.js";
 
 :root { color-scheme: dark; }
 
-:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; }
+:focus-visible:not([role="combobox"]):not([role="option"]):not([role="listbox"]) { outline: 2px solid #60a5fa; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -21,11 +22,3 @@
 .week-range { width: 144px; min-width: 144px; padding-block: 4px; }
 .week-range-track { position: relative; width: 100%; height: 4px; border-radius: 999px; background: #71717a; }
 .week-range-marker { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; border-radius: 50%; background: #f4f4f5; }
-.notification-drawer { margin: 0 0 0 auto; padding: 0; width: min(100%, 640px); max-width: 100%; height: 100dvh; max-height: 100dvh; border: 0; border-left: 1px solid #3f3f46; background: #18181b; color: #f4f4f5; overflow-y: auto; overscroll-behavior: contain; }
-.notification-drawer::backdrop { background: rgb(0 0 0 / 45%); }
-.notification-drawer[open] { animation: drawer-enter 160ms ease-out; }
-@keyframes drawer-enter { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
-
-.market-data-notice { margin: 76px 24px auto auto; padding: 20px; width: min(520px, calc(100% - 32px)); max-width: calc(100% - 32px); max-height: calc(100dvh - 100px); border: 1px solid #3f3f46; border-radius: 12px; background: #18181b; color: #f4f4f5; overflow-y: auto; overscroll-behavior: contain; }
-.market-data-notice::backdrop { background: rgb(0 0 0 / 35%); }
-@media (max-width: 640px) { .market-data-notice { margin-right: 16px; } }
