@@ -37,7 +37,12 @@ const ctx = {
       const symbol = decodeURIComponent(new URL(url).pathname.split('/').pop() || 'AMD');
       if (failQuotes && symbol === '2345.TW') return { status: 404, body: '{}' };
       const scale = symbol === '2345.TW' ? 10 : symbol === '009826.TW' ? .053 : symbol === '0050.TW' ? .6 : 1;
-      const scaledQuote = { ...quote, ...Object.fromEntries(['open', 'high', 'low', 'close'].map(key => [key, quote[key as 'close'].map(value => value * scale)])) };
+      const dailyClose = [...quote.close];
+      const last = dailyClose.length - 1;
+      // Three distinct scenarios exercise the observation lists with synthetic prices.
+      if (symbol === '0050.TW') dailyClose[last - 1] -= 8;
+      if (symbol === '2345.TW') dailyClose[last] -= 40;
+      const scaledQuote = { open: dailyClose.map(c => (c - .1) * scale), high: dailyClose.map(c => (c + .5) * scale), low: dailyClose.map(c => (c - .5) * scale), close: dailyClose.map(c => c * scale), volume: quote.volume };
       return { status: 200, body: JSON.stringify({ chart: { result: [{ timestamp: timestamps, meta: { currency: symbol.endsWith('.TW') ? 'TWD' : 'USD', exchangeTimezoneName: symbol.endsWith('.TW') ? 'Asia/Taipei' : 'America/New_York' }, indicators: { quote: [scaledQuote] } }] } }) };
     } },
   },

@@ -98,6 +98,7 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
               <th className="px-3 py-3 text-left cursor-pointer hover:text-zinc-200 transition-colors" onClick={() => handleSort('symbol')}>
                 股票 <SortIcon field="symbol" />
               </th>
+              <th className="px-3 py-3 text-left">觀察分類<span className="block text-[10px] font-normal">已收盤日 K</span></th>
               <th className="px-3 py-3 text-right cursor-pointer hover:text-zinc-200 transition-colors" onClick={() => handleSort('currentPrice')}>
                 最新價 <SortIcon field="currentPrice" />
               </th>
@@ -142,6 +143,15 @@ export const HoldingsTable: React.FC<Props> = ({ analyses, onSelectStock, filter
                   </button>
                   <div className="text-[10px] text-zinc-400 font-mono">
                     {a.market}
+                  </div>
+                </td>
+                <td className="px-3 py-3 align-top">
+                  <div className="holding-observation">
+                    <span className={`font-medium ${a.observation.kind === 'reduce' ? 'text-red-400' : a.observation.kind === 'add' ? 'text-green-400' : 'text-zinc-200'}`}>{a.observation.label}</span>
+                    <div className="mt-1 text-[10px] text-zinc-400">{a.observation.tradingDate ?? '尚無已收盤資料'}</div>
+                    <ul className="mt-2 space-y-1 text-[11px] text-zinc-300 leading-relaxed">
+                      {a.observation.reasons.map(reason => <li key={reason}>{reason}</li>)}
+                    </ul>
                   </div>
                 </td>
                 {/* Current price */}

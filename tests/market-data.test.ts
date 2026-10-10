@@ -19,6 +19,7 @@ describe('Yahoo data quality', () => {
   it('drops invalid OHLC rather than substituting a fake close for the high', () => {
     const data = payload(); (data.chart.result[0].indicators.quote[0].high as unknown[])[1] = null;
     const result = parseYahooHistory(data, request, now); expect(result.bars).toHaveLength(1); expect(result.meta.warnings[0]).toContain('略過');
+    expect(result.meta.rejectedBars).toBe(1);
   });
   it('silently skips a fully empty no-trade placeholder, including a weekday holiday', () => {
     const data = payload(); const quote = data.chart.result[0].indicators.quote[0];
@@ -26,6 +27,7 @@ describe('Yahoo data quality', () => {
     quote.volume[1] = 0;
     const result = parseYahooHistory(data, request, now);
     expect(result.bars).toHaveLength(1); expect(result.meta.warnings).toEqual([]);
+    expect(result.meta.rejectedBars).toBe(0);
     quote.volume[1] = 10;
     expect(parseYahooHistory(data, request, now).meta.warnings[0]).toContain('異常');
   });

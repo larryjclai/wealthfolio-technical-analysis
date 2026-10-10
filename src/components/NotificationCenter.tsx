@@ -3,16 +3,16 @@ import { StopState, TrailingStopStore } from '../alerts/TrailingStopStore';
 import { AlertHistory } from './AlertHistory';
 import { TrailingStopSummary } from './TrailingStopPanel';
 
-export function NotificationBell({ state, onClick, expanded }: { state: StopState; onClick: () => void; expanded: boolean }) {
+export function NotificationIndicator({ state, onClick, expanded }: { state: StopState; onClick: () => void; expanded: boolean }) {
   const pending = state.rules.filter(rule => rule.triggeredAt && !rule.acknowledged).length;
-  const needsAttention = !!state.error || Object.keys(state.failures).length > 0 || state.rules.some(rule => rule.needsReview);
-  const label = `提醒中心${pending ? `，${pending} 筆待確認` : ''}${needsAttention ? '，有資料需要確認' : ''}`;
+  const needsAttention = Object.keys(state.failures).length > 0 || state.rules.some(rule => rule.needsReview);
+  const severity = state.error || pending > 0 ? 'error' : needsAttention ? 'warning' : 'info';
+  const label = `提醒中心${pending ? `，${pending} 筆移動停利待確認` : ''}${state.error ? '，提醒設定發生錯誤' : ''}${needsAttention ? '，有資料需要確認' : ''}`;
   return <button type="button" aria-label={label} title={label} aria-haspopup="dialog" aria-expanded={expanded}
-    onClick={onClick} className="relative inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-zinc-200 hover:bg-zinc-700">
-    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
+    onClick={onClick} className="health-status-trigger" data-severity={severity}>
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.3 4.1 2.1 18.3A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-2.7L13.7 4.1a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4m0 4h.01" />
     </svg>
-    {(pending > 0 || needsAttention) && <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 flex min-w-4 h-4 items-center justify-center rounded-full bg-amber-300 px-1 text-[10px] font-semibold text-zinc-950">{pending ? pending > 99 ? '99+' : pending : '!'}</span>}
   </button>;
 }
 

@@ -49,7 +49,7 @@ export function parseYahooHistory(data: any, request: HistoryRequest, now = Date
     currency: result.meta?.currency || request.instrument.currency, timezone,
     fetchedAt: new Date(now).toISOString(), latestTradingDate: latest.tradingDate,
     priceBasis: 'provider-ohlc', adjustmentDescription: 'Yahoo 原始 OHLC（含供應商拆股調整，非含息還原報酬）',
-    delayMinutes: null, volumeUnit: 'shares', warnings,
+    delayMinutes: null, volumeUnit: 'shares', warnings, rejectedBars: rejected,
     fiftyTwoWeekHigh: positive(result.meta?.fiftyTwoWeekHigh) ? result.meta.fiftyTwoWeekHigh : Math.max(...yearBars.map(b => b.high)),
     fiftyTwoWeekLow: positive(result.meta?.fiftyTwoWeekLow) ? result.meta.fiftyTwoWeekLow : Math.min(...yearBars.map(b => b.low)),
     splitDates: Object.values(result.events?.splits || {}).map((event: any) => event.date).filter(Number.isFinite),

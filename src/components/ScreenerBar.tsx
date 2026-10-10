@@ -5,9 +5,12 @@ interface Props {
   activeFilters: SignalType[];
   onToggle: (signal: SignalType) => void;
   analyses: StockAnalysis[];
+  matchMode: 'any' | 'all';
+  onMatchModeChange: (mode: 'any' | 'all') => void;
+  onClear: () => void;
 }
 
-export const ScreenerBar: React.FC<Props> = ({ activeFilters, onToggle, analyses }) => {
+export const ScreenerBar: React.FC<Props> = ({ activeFilters, onToggle, analyses, matchMode, onMatchModeChange, onClear }) => {
   const signalTypes = getAllSignalTypes();
   
   // Count how many stocks match each signal
@@ -18,8 +21,17 @@ export const ScreenerBar: React.FC<Props> = ({ activeFilters, onToggle, analyses
   }
   
   return (
-    <div className="flex flex-wrap gap-2 p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
-      <span className="text-xs text-zinc-500 uppercase tracking-wider font-semibold self-center mr-2">篩選條件</span>
+    <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <span className="text-sm text-zinc-200 font-medium">技術條件</span>
+        <label className="flex items-center gap-2 text-xs text-zinc-300">多選方式
+          <select value={matchMode} onChange={event => onMatchModeChange(event.target.value === 'all' ? 'all' : 'any')}
+            className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-zinc-100">
+            <option value="any">符合任一項</option><option value="all">全部符合</option>
+          </select>
+        </label>
+      </div>
+      <div className="flex flex-wrap gap-2">
       {signalTypes.map((st) => {
         const isActive = activeFilters.includes(st.type);
         const count = counts.get(st.type) || 0;
@@ -50,12 +62,14 @@ export const ScreenerBar: React.FC<Props> = ({ activeFilters, onToggle, analyses
       })}
       {activeFilters.length > 0 && (
         <button
-          onClick={() => activeFilters.forEach(f => onToggle(f))}
+          onClick={onClear}
           className="px-3 py-1.5 rounded-lg text-xs text-zinc-400 border border-zinc-700 hover:bg-zinc-800 transition-colors ml-auto"
         >
           清除篩選
         </button>
       )}
+      </div>
+      <p className="mt-3 text-xs text-zinc-400 leading-relaxed">均線位置採最新行情；突破／跌破 MA20 採最近兩筆已收盤日 K，不代表盤中交叉。每個數字是該條件單獨符合的檔數。</p>
     </div>
   );
 };

@@ -4,10 +4,13 @@ import { rsi } from './rsi';
 import { PivotResult } from './pivot';
 import { Bar } from '../market-data/types';
 import { supportResistance } from './support-resistance';
+import { analyzeObservation, Observation } from './observation';
+import type { StopState } from '../alerts/TrailingStopStore';
 
 /** Latest values of all computed indicators for one stock */
 export interface StockAnalysis {
   symbol: string;
+  providerSymbol: string;
   displayName: string;
   market: string;
   currentPrice: number;
@@ -58,9 +61,14 @@ export interface StockAnalysis {
 
   // Triggered conditions
   signals: Signal[];
+  observation: Observation;
 }
 
 export type SignalType = 
+  | 'above_sma20'
+  | 'below_sma20'
+  | 'cross_above_sma20'
+  | 'cross_below_sma20'
   | 'below_sma60'
   | 'below_sma240'
   | 'above_sma240'
@@ -78,6 +86,10 @@ export interface Signal {
 }
 
 const SIGNAL_DEFINITIONS: Record<SignalType, { label: string; sentiment: Signal['sentiment'] }> = {
+  above_sma20: { label: '高於 MA20', sentiment: 'bullish' },
+  below_sma20: { label: '低於 MA20', sentiment: 'bearish' },
+  cross_above_sma20: { label: '收盤突破 MA20', sentiment: 'bullish' },
+  cross_below_sma20: { label: '收盤跌破 MA20', sentiment: 'bearish' },
   below_sma60: { label: '低於季線', sentiment: 'bearish' },
   below_sma240: { label: '低於年線', sentiment: 'bearish' },
   above_sma240: { label: '高於年線', sentiment: 'bullish' },
@@ -99,7 +111,9 @@ function lastValue(arr: (number | null)[]): number | null {
 
 export interface AnalysisInput {
   bars: Bar[];
+  rejectedBars?: number;
   symbol: string;
+  providerSymbol?: string;
   displayName: string;
   market: string;
   quantity: number;
@@ -156,6 +170,25 @@ export function analyzeStock(input: AnalysisInput): StockAnalysis {
 
   // Evaluate signals
   const signals: Signal[] = [];
+  let observation = analyzeObservation(input.bars);
+  if ((input.rejectedBars ?? 0) > 0) {
+    const positive = observation.kind === 'add' || observation.kind === 'hold';
+    observation = { ...observation, kind: positive ? 'watch' : observation.kind, label: positive ? '待觀察' : observation.label,
+      reasons: [...observation.reasons, `行情已略過 ${input.rejectedBars} 筆異常日 K，請先核對資料完整性`] };
+  }
+
+  if (sma20Val !== null && currentPrice > sma20Val) {
+    signals.push({ ...SIGNAL_DEFINITIONS.above_sma20, type: 'above_sma20' });
+  }
+  if (sma20Val !== null && currentPrice < sma20Val) {
+    signals.push({ ...SIGNAL_DEFINITIONS.below_sma20, type: 'below_sma20' });
+  }
+  if (observation.crossedAboveSma20) {
+    signals.push({ ...SIGNAL_DEFINITIONS.cross_above_sma20, type: 'cross_above_sma20' });
+  }
+  if (observation.crossedBelowSma20) {
+    signals.push({ ...SIGNAL_DEFINITIONS.cross_below_sma20, type: 'cross_below_sma20' });
+  }
   
   if (sma60Val !== null && currentPrice < sma60Val) {
     signals.push({ ...SIGNAL_DEFINITIONS.below_sma60, type: 'below_sma60' });
@@ -190,6 +223,7 @@ export function analyzeStock(input: AnalysisInput): StockAnalysis {
 
   return {
     symbol: input.symbol,
+    providerSymbol: input.providerSymbol ?? input.symbol,
     displayName: input.displayName,
     market: input.market,
     currentPrice,
@@ -224,6 +258,7 @@ export function analyzeStock(input: AnalysisInput): StockAnalysis {
     week52Low: w52Low,
     week52Position: w52Position,
     signals,
+    observation,
   };
 }
 
@@ -236,9 +271,37 @@ export function getAllSignalTypes(): { type: SignalType; label: string; sentimen
 }
 
 /** Filter analyses by active signal types */
-export function filterBySignals(analyses: StockAnalysis[], activeSignals: SignalType[]): StockAnalysis[] {
+export function filterBySignals(analyses: StockAnalysis[], activeSignals: SignalType[], match: 'any' | 'all' = 'any'): StockAnalysis[] {
   if (activeSignals.length === 0) return analyses;
-  return analyses.filter(a => 
-    activeSignals.some(sig => a.signals.some(s => s.type === sig))
-  );
+  return analyses.filter(a => {
+    const matches = (sig: SignalType) => a.signals.some(s => s.type === sig);
+    return match === 'all' ? activeSignals.every(matches) : activeSignals.some(matches);
+  });
+}
+
+/** Saved stop triggers remain a risk condition after acknowledgment. */
+export function withTrailingStopObservations(analyses: StockAnalysis[], state: StopState): StockAnalysis[] {
+  return analyses.map(analysis => {
+    const rule = state.rules.find(r => r.instrument.providerSymbol === analysis.providerSymbol && r.instrument.market === analysis.market);
+    const notices: string[] = [];
+    if (state.error) notices.push('提醒設定載入／儲存錯誤，請先檢查提醒中心');
+    else if (!state.ready) notices.push('提醒設定尚未載入，暫不列入加碼或續抱觀察');
+    if (rule?.needsReview) notices.push(rule.needsReview);
+    if (state.failures[analysis.providerSymbol]) notices.push('停利行情更新失敗，請重試檢查');
+    if (rule && analysis.observation.tradingDate && rule.lastTradingDate !== analysis.observation.tradingDate) {
+      notices.push(rule.lastTradingDate < analysis.observation.tradingDate
+        ? `停利追蹤仍停在 ${rule.lastTradingDate}，請立即檢查日 K`
+        : `停利追蹤已更新至 ${rule.lastTradingDate}，請重新整理總覽行情`);
+    }
+    if (rule?.triggeredAt) {
+      return { ...analysis, observation: { ...analysis.observation, kind: 'reduce' as const, label: '減碼檢查',
+        reasons: [`${rule.triggeredAt} 已達移動停利條件${rule.acknowledged ? '（已確認，尚未重新追蹤）' : '（待確認）'}`, ...notices] } };
+    }
+    if (!notices.length) return analysis;
+    const blocked = analysis.observation.kind === 'add' || analysis.observation.kind === 'hold';
+    return { ...analysis, observation: { ...analysis.observation,
+      kind: blocked ? 'watch' as const : analysis.observation.kind,
+      label: blocked ? '待觀察' : analysis.observation.label,
+      reasons: [...notices, ...analysis.observation.reasons] } };
+  });
 }

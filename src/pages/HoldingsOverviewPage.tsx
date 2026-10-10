@@ -2,23 +2,27 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { HostAdapter } from '../host/HostAdapter';
 import { SymbolResolver } from '../market-data/SymbolResolver';
 import { YahooFinanceProvider } from '../market-data/YahooFinanceProvider';
-import { analyzeStock, StockAnalysis, SignalType, filterBySignals, AnalysisInput } from '../indicators/analysis';
+import { analyzeStock, StockAnalysis, SignalType, filterBySignals, AnalysisInput, withTrailingStopObservations } from '../indicators/analysis';
+import type { StopState } from '../alerts/TrailingStopStore';
 import { HoldingsTable } from '../components/HoldingsTable';
 import { MarketDataNotice } from '../components/MarketDataNotice';
 import { ScreenerBar } from '../components/ScreenerBar';
 
 interface Props {
   host: HostAdapter;
+  stopState: StopState;
   headerActions?: React.ReactNode;
   onNavigateToChart?: (symbol: string, market: string) => void;
 }
 
-const HoldingsOverviewPage: React.FC<Props> = ({ host, onNavigateToChart, headerActions }) => {
+const HoldingsOverviewPage: React.FC<Props> = ({ host, stopState, onNavigateToChart, headerActions }) => {
   const generation = useRef(0);
   const [failures, setFailures] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [analyses, setAnalyses] = useState<StockAnalysis[]>([]);
   const [activeFilters, setActiveFilters] = useState<SignalType[]>([]);
+  const [matchMode, setMatchMode] = useState<'any' | 'all'>('any');
+  const [observationFilter, setObservationFilter] = useState<'all' | 'add' | 'hold' | 'reduce'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState({ current: 0, total: 0, symbol: '' });
@@ -102,7 +106,9 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, onNavigateToChart, header
 
           const analysisInput: AnalysisInput = {
             bars: historyResult.bars,
+            rejectedBars: historyResult.meta.rejectedBars,
             symbol: info.holding.instrument?.symbol || sym.replace(/\.(TW|TWO)$/, ''),
+            providerSymbol: instrument.providerSymbol,
             displayName: info.displayName || sym,
             market,
             quantity: info.holding.quantity || 0,
@@ -158,7 +164,10 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, onNavigateToChart, header
     }
   };
 
-  const filteredAnalyses = filterBySignals(analyses, activeFilters);
+  const observedAnalyses = withTrailingStopObservations(analyses, stopState);
+  const observationAnalyses = observationFilter === 'all' ? observedAnalyses : observedAnalyses.filter(a => a.observation.kind === observationFilter);
+  const filteredAnalyses = filterBySignals(observationAnalyses, activeFilters, matchMode);
+  const filtered = activeFilters.length > 0 || observationFilter !== 'all';
 
   // Count signals
   const totalSignals = analyses.reduce((sum, a) => sum + a.signals.length, 0);
@@ -225,18 +234,32 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, onNavigateToChart, header
         {/* Screener filters */}
         {analyses.length > 0 && (
           <div className="mb-4">
+            <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="觀察清單">
+              {([['all', '全部持股'], ['add', '加碼觀察'], ['hold', '續抱觀察'], ['reduce', '減碼檢查']] as const).map(([kind, label]) => {
+                const count = kind === 'all' ? observedAnalyses.length : observedAnalyses.filter(a => a.observation.kind === kind).length;
+                return <button key={kind} type="button" aria-pressed={observationFilter === kind} onClick={() => setObservationFilter(kind)}
+                  className={`rounded-full border px-4 py-2 text-sm transition-colors ${observationFilter === kind ? 'border-zinc-500 bg-zinc-700 text-zinc-100' : 'border-zinc-700 text-zinc-300 hover:bg-zinc-800'}`}>
+                  {label}<span className="ml-2 text-xs tabular-nums">{count}</span>
+                </button>;
+              })}
+            </div>
+            <p className="mb-4 text-xs text-zinc-400 leading-relaxed">觀察分類採最近已收盤日 K，先看 MA60／MA240 趨勢，再看 MA20 時機；已觸發的停利條件優先列入減碼檢查。分類是檢查清單，不是買賣指令。</p>
             <ScreenerBar
               activeFilters={activeFilters}
               onToggle={handleToggleFilter}
-              analyses={analyses}
+              analyses={observationAnalyses}
+              matchMode={matchMode}
+              onMatchModeChange={setMatchMode}
+              onClear={() => setActiveFilters([])}
             />
           </div>
         )}
 
         {/* Filter status */}
-        {activeFilters.length > 0 && (
-          <div className="mb-4 text-xs text-zinc-400">
-            篩選結果: 顯示 {filteredAnalyses.length} / {analyses.length} 檔
+        {filtered && (
+          <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-zinc-400" role="status">
+            顯示 {filteredAnalyses.length} / {analyses.length} 檔 · 觀察清單與技術條件需同時成立
+            <button type="button" className="underline text-zinc-300" onClick={() => { setObservationFilter('all'); setActiveFilters([]); }}>重設全部篩選</button>
           </div>
         )}
 
@@ -244,7 +267,7 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, onNavigateToChart, header
         {loading && analyses.length === 0 ? <p role="status" className="text-zinc-400 py-8">正在載入持倉與行情…</p> : <HoldingsTable
           analyses={filteredAnalyses}
           onSelectStock={handleSelectStock}
-          filtered={activeFilters.length > 0}
+          filtered={filtered}
         />}
       </div>
     </div>

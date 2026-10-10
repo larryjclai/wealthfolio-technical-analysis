@@ -4,7 +4,7 @@ import TechnicalAnalysisPage from './pages/TechnicalAnalysisPage';
 import HoldingsOverviewPage from './pages/HoldingsOverviewPage';
 import './index.css';
 import { HostAdapter } from './host/HostAdapter';
-import { NotificationBell, NotificationCenter } from './components/NotificationCenter';
+import { NotificationIndicator, NotificationCenter } from './components/NotificationCenter';
 import { TrailingStopStore } from './alerts/TrailingStopStore';
 import { Market } from './market-data/types';
 
@@ -39,11 +39,11 @@ const TechnicalAnalysisApp: React.FC<{host: HostAdapter; store: TrailingStopStor
     setSelectedStock({ symbol, market: market as Market });
     setCurrentView('chart');
   };
-  const notificationAction = <NotificationBell state={stopState} onClick={() => setNotificationsOpen(true)} expanded={notificationsOpen} />;
+  const notificationAction = <NotificationIndicator state={stopState} onClick={() => setNotificationsOpen(true)} expanded={notificationsOpen} />;
   // Keep the overview mounted so quotes, filters, sorting and table scroll survive chart navigation.
   return <>
     <div hidden={currentView !== 'overview'}>
-      <HoldingsOverviewPage host={host} headerActions={notificationAction} onNavigateToChart={select} />
+      <HoldingsOverviewPage host={host} stopState={stopState} headerActions={notificationAction} onNavigateToChart={select} />
     </div>
     {currentView === 'chart' && <TechnicalAnalysisPage
       host={host} stopStore={store} stopState={stopState} headerActions={notificationAction}

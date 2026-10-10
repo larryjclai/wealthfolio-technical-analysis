@@ -8,8 +8,8 @@ export function MarketDataNotice({ failures, warnings }: { failures: string[]; w
   return <>
     <button type="button" aria-label={label} title={label} aria-haspopup="dialog"
       onClick={() => dialog.current?.showModal()}
-      className="size-11 shrink-0 inline-flex items-center justify-center rounded-full text-amber-300 hover:bg-zinc-800">
-      <svg aria-hidden="true" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      className="health-status-trigger" data-severity="warning">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M10.3 4.1 2.1 18.3A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-2.7L13.7 4.1a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4m0 4h.01" />
       </svg>
     </button>

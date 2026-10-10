@@ -45,6 +45,7 @@ export interface HistoryResult {
     delayMinutes: number | null;
     volumeUnit: 'shares' | 'unknown';
     warnings: string[];
+    rejectedBars?: number;
     fiftyTwoWeekHigh?: number;
     fiftyTwoWeekLow?: number;
     splitDates?: number[];
