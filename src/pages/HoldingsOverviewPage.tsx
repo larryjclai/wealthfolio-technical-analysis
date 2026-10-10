@@ -180,7 +180,9 @@ const HoldingsOverviewPage: React.FC<Props> = ({ host, stopState, onNavigateToCh
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">持倉技術分析</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Comportfolio</h1>
+            <p className="text-sm text-zinc-300 mt-1">Your portfolio compass.</p>
+            <p className="text-sm text-zinc-400 mt-1">看清持倉趨勢與風險。</p>
             <p className="text-sm text-zinc-400 mt-1">
               {analyses.length > 0
                 ? `${analyses.length} 檔持倉 · ${totalSignals} 個訊號（${bullishCount} 多方 / ${bearishCount} 空方）`

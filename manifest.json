@@ -1,8 +1,8 @@
 {
   "id": "wealthfolio-technical-analysis",
-  "name": "Technical Analysis",
-  "version": "1.1.0",
-  "description": "持倉技術分析、成本線、買賣紀錄與每日收盤移動停利提醒",
+  "name": "Comportfolio",
+  "version": "1.1.1",
+  "description": "看清持倉趨勢與風險。",
   "author": "juicheng",
   "main": "dist/addon.js",
   "sdkVersion": "3.8.0",
@@ -19,7 +19,7 @@
         {
           "id": "tech-analysis",
           "route": "tech-analysis",
-          "label": "Technical Analysis",
+          "label": "Comportfolio",
           "icon": "sparkle",
           "order": 100
         }

@@ -1,4 +1,8 @@
-# Wealthfolio Technical Analysis
+# Comportfolio
+
+Your portfolio compass.
+
+看清持倉趨勢與風險。
 
 在 Wealthfolio 中查看台股、美股的技術指標、持倉成本與買賣點，並為個別股票設定移動停利提醒。
 
@@ -7,7 +11,7 @@
 1. 使用 **Wealthfolio 3.8.0 或更新版本**。
 2. 到 [最新版本下載頁](https://github.com/larryjclai/wealthfolio-technical-analysis/releases/latest) 下載附件 **addon.zip**，不需要解壓縮。
 3. 在 Wealthfolio 開啟「設定 → 擴充功能 → 從檔案安裝」，選取下載的檔案並確認所需權限。
-4. 從側邊欄開啟 **Technical Analysis**。
+4. 從側邊欄開啟 **Comportfolio**。
 
 更新時同樣匯入新版 `addon.zip`，既有的追蹤設定與提醒歷史會保留。
 
